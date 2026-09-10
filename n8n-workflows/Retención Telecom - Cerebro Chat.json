@@ -1,0 +1,319 @@
+{
+  "name": "Retención Telecom - Cerebro Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d76ec08a-3362-47fa-8d21-24ebabca7911",
+              "name": "errorLog",
+              "value": "=⚠️ ERROR en Conciliador Timestamp: {{ $now.toISO() }} Nodo fallido: {{ $json.execution?.error?.node?.name || 'Desconocido' }} Mensaje: {{ $json.execution?.error?.message || 'Sin detalle' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2944,
+        1584
+      ],
+      "id": "108ba139-860e-4c7b-8a4c-efa45450b989",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        2720,
+        1584
+      ],
+      "id": "2b60fe11-23a3-494f-9212-715de573fcf7",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-retencion",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "ffe58352-153d-4a8f-9dd4-8434a7eecbd4",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        1920
+      ],
+      "webhookId": "77dedcce-294d-4ec7-8aef-ce325f752389"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"respuesta\": $json.respuesta_bot,\n  \"nivel_enojo\": $json.nivel_enojo,\n  \"tipo_ticket\": $json.tipo_ticket,\n  \"motivo\": $json.motivo,\n  \"resumen_problema\": $json.resumen_problema,\n  \"intencion_cancelacion_detectada\": $json.intencion_cancelacion_detectada,\n  \"relevancia_problema\": $json.relevancia_problema\n} }}",
+        "options": {}
+      },
+      "id": "dcbf63d0-55c6-49f9-9371-4186d6606bd0",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        1920
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sc-1",
+              "name": "customer_id",
+              "value": "={{ $('Webhook').item.json.body.customer_id }}",
+              "type": "string"
+            },
+            {
+              "id": "sc-2",
+              "name": "sesion_id",
+              "value": "={{ $('Webhook').item.json.body.sesion_id }}",
+              "type": "string"
+            },
+            {
+              "id": "sc-3",
+              "name": "probabilidad_churn",
+              "value": "={{ $('Webhook').item.json.body.contexto_inicial.churnProbability }}",
+              "type": "number"
+            },
+            {
+              "id": "sc-4",
+              "name": "nivel_enojo",
+              "value": "={{ JSON.parse($json.output).nivel_enojo }}",
+              "type": "number"
+            },
+            {
+              "id": "sc-5",
+              "name": "motivo",
+              "value": "={{ JSON.parse($json.output).motivo }}",
+              "type": "string"
+            },
+            {
+              "id": "sc-6",
+              "name": "tipo_ticket",
+              "value": "={{ JSON.parse($json.output).tipo_ticket }}",
+              "type": "string"
+            },
+            {
+              "id": "sc-7",
+              "name": "resumen_problema",
+              "value": "={{ JSON.parse($json.output).resumen_problema }}",
+              "type": "string"
+            },
+            {
+              "id": "ff146e36-fa05-4ad6-969d-3ad76fd3827b",
+              "name": "intencion_cancelacion_detectada",
+              "value": "={{ JSON.parse($json.output).intencion_cancelacion_detectada }}",
+              "type": "boolean"
+            },
+            {
+              "id": "52af77ff-21f3-4915-9cd3-dbb8651dda4c",
+              "name": "relevancia_problema",
+              "value": "={{ JSON.parse($json.output).relevancia_problema }}",
+              "type": "number"
+            },
+            {
+              "id": "sc-8",
+              "name": "respuesta_bot",
+              "value": "={{ JSON.parse($json.output).respuesta_bot }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e2afdf31-a330-44e1-8bf1-21146a849366",
+      "name": "Set Respuesta",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3280,
+        1920
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=[MENSAJE ENTRANTE DEL CLIENTE]\n{{ $json.body.message }}\n\n[ENTORNO METRICAS]\n- Probabilidad de Churn (Modelo ML): {{ $json.body.probabilidad_churn || null }}\n- Estado Emocional Histórico (DB): {{ $json.body.contexto_inicial.clientProfile.EstadoEmocional || null}}\n- Tipo de contrato: {{ $json.body.contexto_inicial.clientProfile.Contract }}\n- Meses de contrato: {{ $json.body.contexto_inicial.clientProfile.tenure }}\n- Paga mensual y total: {{ $json.body.contexto_inicial.clientProfile.MonthlyCharges }} y {{ $json.body.contexto_inicial.clientProfile.TotalCharges }}",
+        "options": {
+          "systemMessage": "=Eres \"Cerebro\", el componente de análisis crítico, evaluación de riesgos y generación de respuestas de nuestra plataforma de soporte. Tu trabajo es procesar el mensaje del cliente considerando sus métricas actuales y el historial de la conversación que se te proporciona de forma automática.\n\nINSTRUCCIONES DE ANÁLISIS:\n1. Evalúa el 'nivel_enojo' del 1 al 10 basándote en el mensaje actual y la frustración acumulada que observes en el historial de chat (memoria).\n2. Clasifica el 'tipo_ticket' eligiendo estrictamente entre: [\"Técnico\", \"Facturación\", \"Administrativo\", \"Retención\"].\n3. Sintetiza la causa raíz en un 'motivo' de 2 o 3 palabras.\n4. Genera un 'resumen_problema' conciso en una sola oración.\n5. Determiná si el cliente expresó explícitamente su intención de cancelar o darse de baja (no una simple queja) — devolvé \"intencion_cancelacion_detectada\" como true o false.\n6. Evaluá \"relevancia_problema\" del 1 al 10: qué tan sustancial es la información NUEVA que aporta este mensaje puntual sobre el problema real del cliente, independientemente de su tono — 1 si es un saludo/agradecimiento sin contenido nuevo, 10 si describe el problema central por primera vez o agrega un detalle clave nuevo.\n\nINSTRUCCIONES DE REDACCIÓN PARA 'respuesta_bot':\n1. Habla siempre en un español natural, fluido, empático y humano. Evita modismos robóticos.\n2. Revisa el historial de la conversación antes de responder para mantener la continuidad si el cliente ya explicó algo antes.\n3. Si la probabilidad de Churn es alta (> 0.7) o el nivel de enojo es crítico (>= 7), valida su frustración de inmediato en tu primera frase y ve directo a la solución.\n\nOBLIGATORIO: Devuelve la salida ESTRICTAMENTE en el siguiente formato JSON. No agregues texto introductorio, ni conclusiones, ni disculpas fuera del esquema JSON. No uses bloques de código con comillas (```json). Devuelve solo las llaves y el contenido:\n\n{\n  \"nivel_enojo\": 8,\n  \"motivo\": \"Aumento de tarifa\",\n  \"tipo_ticket\": \"Facturación\",\n  \"resumen_problema\": \"El cliente exige la baja porque la factura duplicó su valor este mes.\",\n  \"respuesta_bot\": \"Lamento mucho el inconveniente con tu facturación...\",\n  \"intencion_cancelacion_detectada\": true,\n  \"relevancia_problema\": 9\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2944,
+        1920
+      ],
+      "id": "4530adcb-d765-4697-8247-ff1c4ff9b9b6",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.sesion_id.toString() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        3040,
+        2128
+      ],
+      "id": "b0e04d63-dfc7-47ba-8650-044e47a6de82",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:7b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        2128
+      ],
+      "id": "1a48a473-fe8b-4d1e-805d-8389e8e557d3",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "lNdCV1OQrnKyrrW3",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "user-agent": "axios/1.7.2",
+            "content-length": "227",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "host": "localhost:5678",
+            "connection": "keep-alive"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "customer_id": "5821-MMEIL",
+            "sesion_id": "21",
+            "message": "no hay mucho mas q te pueda decir, mas q nada q tengo entre corte en esos horarios q te dije y nada mas",
+            "contexto_inicial": {
+              "clientProfile": null,
+              "churnProbability": null
+            }
+          },
+          "webhookUrl": "http://localhost:5678/webhook/chat-retencion",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Set Respuesta": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Set Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e6b54aee-4076-4fff-a0f3-2525abd3f12f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4345195d464ec8fce96a11287058dde4c64cc7369030d54a2b968bfb4ba861f6"
+  },
+  "nodeGroups": [],
+  "id": "VwDOnaCa6058QrBe",
+  "tags": []
+}

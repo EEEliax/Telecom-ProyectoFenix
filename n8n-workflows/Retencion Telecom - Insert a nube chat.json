@@ -1,0 +1,393 @@
+{
+  "name": "Retencion Telecom - Insert a nube chat",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1522026750102601738",
+          "mode": "list",
+          "cachedResultName": "Operaciones e IA",
+          "cachedResultUrl": "https://discord.com/channels/1522026750102601738"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1522029992408776984",
+          "mode": "list",
+          "cachedResultName": "urgente-bajas",
+          "cachedResultUrl": "https://discord.com/channels/1522026750102601738/1522029992408776984"
+        },
+        "content": "=🚨 **ALERTA DE EVALUACIÓN DE RIESGO** 🚨\n======================================\n👤 **Cliente ID:** `{{ $('Webhook').item.json.body.customer_id }}`\n🆔 **Sesión ID:** `{{ $('Webhook').item.json.body.sesion_id }}`\n\n📈 **MÉTRICAS DE DETECCIÓN:**\n• Probabilidad de Churn: `{{ ($('Webhook').item.json.body.probabilidad_churn * 100).toFixed(2) }}%`\n• Nivel de Frustración: `{{ $('Webhook').item.json.body.nivel_enojo }}/10`\n\n📋 **DIAGNÓSTICO DE CEREBRO:**\n• Tipo de Ticket: **{{ $('Webhook').item.json.body.tipo_ticket }}**\n• Motivo Raíz: *{{ $('Webhook').item.json.body.motivo }}*\n\n💬 **DETALLE DEL PROBLEMA (LLM):**\n> {{ $('Webhook').item.json.body.resumen_problema }}\n\n======================================\n{{ $('Webhook').item.json.body.nivel_enojo >= 7 ? '⚠️ @here ¡Atención equipo de retención, cliente crítico!' : '✅ Registro administrativo guardado.' }}",
+        "options": {}
+      },
+      "id": "82553495-45bb-414e-8712-9801682a7c59",
+      "name": "Discord (Crítico)",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -32
+      ],
+      "webhookId": "eb9e1977-4743-4738-b33c-26b96289fef1",
+      "credentials": {
+        "discordBotApi": {
+          "id": "IcrLmLx3lMNPXtrK",
+          "name": "Discord Bot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1522026750102601738",
+          "mode": "list",
+          "cachedResultName": "Operaciones e IA",
+          "cachedResultUrl": "https://discord.com/channels/1522026750102601738"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1522030042409074888",
+          "mode": "list",
+          "cachedResultName": "logs-normales",
+          "cachedResultUrl": "https://discord.com/channels/1522026750102601738/1522030042409074888"
+        },
+        "content": "=🟢 **NOTIFICACIÓN DE SOPORTE - CASO NORMAL** 🟢\n======================================\n👤 **Cliente ID:** `{{ $('Webhook').item.json.body.customer_id }}`\n🆔 **Sesión ID:** `{{ $('Webhook').item.json.body.sesion_id }}`\n\n📈 **MÉTRICAS DE DETECCIÓN:**\n• Probabilidad de Churn: `{{ ($('Webhook').item.json.body.probabilidad_churn * 100).toFixed(2) }}%`\n• Nivel de Frustración: `{{ $('Webhook').item.json.body.nivel_enojo }}/10`\n\n📋 **DIAGNÓSTICO DE CEREBRO:**\n• Tipo de Ticket: **{{ $('Webhook').item.json.body.tipo_ticket }}**\n• Motivo Raíz: *{{ $('Webhook').item.json.body.motivo }}*\n\n💬 **DETALLE DEL PROBLEMA (LLM):**\n> {{ $('Webhook').item.json.body.resumen_problema }}\n\n======================================\n✅ Caso procesado con éxito. No requiere intervención humana urgente.",
+        "options": {}
+      },
+      "id": "6d32b0e6-08b2-4b66-9a49-72470cf9a74e",
+      "name": "Discord (Normal)",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        208
+      ],
+      "webhookId": "e4e49661-596e-45ba-abb6-c5e06c257b31",
+      "credentials": {
+        "discordBotApi": {
+          "id": "IcrLmLx3lMNPXtrK",
+          "name": "Discord Bot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.tickets_soporte \n(sesion_id, tipo_ticket, descripcion_problema, nivel_enojo_detectado, probabilidad_churn_ml, prioridad, intencion_cancelacion) \nVALUES (\n  {{ $('Webhook').item.json.body.sesion_id }},\n  '{{ $('Webhook').item.json.body.tipo_ticket }}',\n  '{{ $('Webhook').item.json.body.resumen_problema }}',\n  {{ $('Webhook').item.json.body.nivel_enojo }},\n  {{ $('Webhook').item.json.body.probabilidad_churn }},\n  '{{ $('Webhook').item.json.body.nivel_enojo >= 7 || $('Webhook').item.json.body.probabilidad_churn > 0.7 ? 'CRITICO' : 'NORMAL' }}',\n  {{ $('Webhook').item.json.body.intencion_cancelacion_detectada }}\n);",
+        "options": {}
+      },
+      "id": "04186f3c-9abe-4202-a61f-f2b017d6f5d9",
+      "name": "Crear Ticket (Soporte)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        0,
+        96
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Dd3vs2GJa054Njlz",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "proyecto-fenix-datalake-2026",
+        "fileName": "=01-bronze-raw/chat-interactions/year={{ $now.format('yyyy') }}/month={{ $now.format('MM') }}/day={{ $now.format('dd') }}/{{ $('Webhook').item.json.body.customer_id }}_{{ $('Webhook').item.json.body.sesion_id }}.json",
+        "binaryData": false,
+        "fileContent": "={{ JSON.stringify({\n  \"meta_datos\": {\n    \"customer_id\": $('Webhook').item.json.body.customer_id,\n    \"sesion_id\": $('Webhook').item.json.body.sesion_id,\n    \"fecha_hora\": new Date().toISOString().replace('T', ' ').substring(0, 19)\n  },\n  \"variables_sagemaker_en_ese_instante\": $('Webhook').item.json.body.clientProfile,\n  \"analisis_ia\": {\n    \"probabilidad_churn_sagemaker\": $('Webhook').item.json.body.probabilidad_churn,\n    \"nivel_enojo\": $('Webhook').item.json.body.nivel_enojo,\n    \"motivo_reclamo\": $('Webhook').item.json.body.motivo,\n    \"tipo_ticket_detectado\": $('Webhook').item.json.body.tipo_ticket,\n    \"intencion_cancelacion_detectada\": $('Webhook').item.json.body.intencion_cancelacion_detectada,\n    \"relevancia_problema\": $('Webhook').item.json.body.relevancia_problema\n  }\n}) }}",
+        "additionalFields": {}
+      },
+      "id": "d97ffae3-9bc3-4ef3-9bcc-4c46b91e19de",
+      "name": "Log S3 Bronze",
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 1,
+      "position": [
+        240,
+        96
+      ],
+      "credentials": {
+        "aws": {
+          "id": "yarHkkUKIAG8OOAP",
+          "name": "AWS (IAM) account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as ticket_count \nFROM public.tickets_soporte t \nJOIN public.sesiones_chat s ON t.sesion_id = s.id \nJOIN public.crm_contactos crm ON s.contacto_id = crm.id \nWHERE crm.customer_id = '{{ $('Webhook').item.json.body.customer_id }}'\nAND t.fecha_creacion >= NOW() - INTERVAL '7 days';",
+        "options": {}
+      },
+      "id": "c8a2a942-1d8d-4138-9110-8aa69b581c4b",
+      "name": "Contar Tickets Semanales",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        464,
+        96
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Dd3vs2GJa054Njlz",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.crm_contactos SET estado_emocional = 'Crítico' WHERE customer_id = '{{ $('Webhook').item.json.body.customer_id }}';",
+        "options": {}
+      },
+      "id": "2ac32c84-bb14-4498-94da-b3397a555ccc",
+      "name": "Update CRM Crítico",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        928,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Dd3vs2GJa054Njlz",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f47e3e92-fe3a-4800-99fd-f3cb8161a4e6",
+              "leftValue": "={{ $json.body.nivel_enojo }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "d76d5641-4208-49fd-a92d-80ef49be3fb5",
+              "leftValue": "={{ $json.body.probabilidad_churn }}",
+              "rightValue": "={{ 0.7 }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "a216f56d-181e-4355-a0ce-d86b60185f1e",
+              "leftValue": "={{ $json.body.intencion_cancelacion_detectada }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -608,
+        96
+      ],
+      "id": "fcc061ce-2b3c-4a8b-a843-f6527c692cbf",
+      "name": "Router (Evaluación de Riesgo)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "18de840b-a6ae-4f4f-b19f-bcb9d39a6be9",
+              "leftValue": "={{ $json.ticket_count.toNumber() }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "98ac21ce-9cf5-4e87-a39b-25d4af8540bf",
+              "leftValue": "={{ $('Webhook').item.json.body.probabilidad_churn }}",
+              "rightValue": 0.7,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "d38c7e6b-d5c6-4158-b15d-ed5981902334",
+              "leftValue": "={{ $('Webhook').item.json.body.intencion_cancelacion_detectada }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        96
+      ],
+      "id": "73e1a17e-b53a-42f3-a211-8284f7c6ca83",
+      "name": "IF Tickets > 3 y proba 0.7"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-cierre",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -880,
+        96
+      ],
+      "id": "05959979-65fc-48ea-8d8a-af68714d8ff2",
+      "name": "Webhook",
+      "webhookId": "00b3a3a9-b0cd-4f3d-bdff-25f9f734350c"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Discord (Crítico)": {
+      "main": [
+        [
+          {
+            "node": "Crear Ticket (Soporte)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord (Normal)": {
+      "main": [
+        [
+          {
+            "node": "Crear Ticket (Soporte)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear Ticket (Soporte)": {
+      "main": [
+        [
+          {
+            "node": "Log S3 Bronze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log S3 Bronze": {
+      "main": [
+        [
+          {
+            "node": "Contar Tickets Semanales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contar Tickets Semanales": {
+      "main": [
+        [
+          {
+            "node": "IF Tickets > 3 y proba 0.7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router (Evaluación de Riesgo)": {
+      "main": [
+        [
+          {
+            "node": "Discord (Crítico)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord (Normal)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Tickets > 3 y proba 0.7": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Crítico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Router (Evaluación de Riesgo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0c81fa8d-4b17-44af-8f14-a9952a961a1f",
+  "meta": {
+    "instanceId": "4345195d464ec8fce96a11287058dde4c64cc7369030d54a2b968bfb4ba861f6"
+  },
+  "nodeGroups": [],
+  "id": "CTNuO596mPQRPQ7K",
+  "tags": []
+}
