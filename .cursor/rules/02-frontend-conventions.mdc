@@ -1,0 +1,13 @@
+---
+description: Convenciones de frontend (React/Vite/Tailwind) para Telecom FyB
+globs: proyecto-real/frontend/**
+alwaysApply: false
+---
+
+# Convenciones de Frontend
+
+- Estructura nativa de React + Vite; Tailwind CSS vía directivas en `index.css` y tokens de marca en `tailwind.config.js` (`brand`, `brand-dark`, `brand-sky`, `background`, `card`) — **Tailwind v3, config en JS**, no v4/CSS-first. El v0-export usa v4; ver mapeo de tokens en `.cursor/specs/migracion-frontend-v0/design.md`.
+- Todo formulario de login SHALL incluir validación client-side (no enviar con campos vacíos) y timeout de 10s vía `AbortController`.
+- **V2 (pivot a BFF + Socket.io, 2026-08-27) — corrige la regla anterior de chat efímero:** el `ChatWidget` se conectará a Socket.io (evento `chat:message`), no a un endpoint HTTP por turno. `POST /api/chat/start` abre/reconecta la sesión al montar el componente; el botón "Finalizar Chat" (con modal de confirmación) llama a `POST /api/chat/end`. Contrato completo en `.cursor/specs/backend-chat-tiempo-real/`. **Esta integración todavía NO está hecha** — `ChatWidget.jsx` sigue 100% mockeado hasta que se aborde como spec aparte; no agregues `socket.io-client` sin que se pida explícitamente.
+- Indicador "Escribiendo..." con clases utilitarias nativas de Tailwind (`animate-pulse` / `animate-bounce`).
+- Nomenclatura de componentes: PascalCase con sufijo descriptivo (`InicioPage`, `FacturacionPage`, `ServiciosPage`, `SoportePage`, `ChatWidget`, `AppLayout`, `Sidebar`), consistente con `LandingPage.jsx` / `LoginPage.jsx` / `DashboardPage.jsx` ya existentes.

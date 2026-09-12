@@ -1,0 +1,13 @@
+---
+description: Convenciones de backend (Express/Node) para Telecom FyB
+globs: proyecto-real/backend/**
+alwaysApply: false
+---
+
+# Convenciones de Backend
+
+- Patrón modular estricto: inicialización en `index.js`, rutas en `routes/`, lógica de negocio y SQL nativo en `controllers/`.
+- Antes de levantar el servidor HTTP, validar que todas las variables de entorno requeridas estén presentes; si falta alguna, `process.exit(1)`.
+- El endpoint de login SHALL ejecutar el JOIN con `clientes` y evaluar `churn_historico` **antes** de verificar la contraseña con bcrypt (evita cómputo innecesario en cuentas dadas de baja).
+- Todo controlador de Express SHALL estar envuelto en `try/catch` para manejar excepciones de DB o caídas de red de n8n; nunca exponer stack traces al cliente.
+- **V2 (pivot a BFF + Socket.io, 2026-08-27):** el bucle de conversación del chat ya NO usa `POST /api/chat/message` por turno HTTP — ahora es un evento de Socket.io (`chat:message`), con JWT validado en el handshake. `POST /api/chat/start` inicializa/reconecta la sesión (una sola query de perfil + una sola llamada a SageMaker). `POST /api/chat/end` cierra manualmente. Un cron (`node-cron`, cada 30 min) cierra sesiones "zombie" inactivas por más de 2 horas. Ver `.cursor/specs/backend-chat-tiempo-real/` para el contrato completo — reemplaza la referencia anterior a `/api/chat/message`/`/api/chat/close` en este archivo.

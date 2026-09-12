@@ -1,0 +1,17 @@
+---
+description: Contexto general del proyecto Telecom FyB / Proyecto Fénix V2
+alwaysApply: true
+---
+
+# Contexto — Telecom FyB / Proyecto Fénix V2
+
+Este proyecto tiene tres capas de documentación, en orden de vigencia:
+
+1. **Vault de Obsidian** (fuera de este repo, `Elias/01 - Proyectos/Telecom/`) — fuente de verdad de más alto nivel para decisiones de arquitectura, esquema de DB confirmado, y la checklist de qué datos son reales vs. mockeados (`Proyecto Fénix V2 - Arquitectura.md`, sección 6). Si una duda no se resuelve en los documentos de este repo, señalala en vez de asumir.
+2. **`.cursor/specs/`** (esta carpeta) — tareas activas del Proyecto Fénix V2, en formato `requirements.md` / `design.md` / `tasks.md` por feature. Actualizá `tasks.md` de la feature correspondiente a medida que avances (marcando checkboxes), en vez de generar un plan suelto aparte.
+3. **`.kiro/specs/especificaciones-soporte/`** — documenta el sistema **V1**, ya implementado y testeado (Landing + Login + Dashboard con chat efímero). Está anotado con banners `⚠️ DOCUMENTO HISTÓRICO` y notas `> V2:` donde el Proyecto Fénix V2 lo contradice. No sigas literalmente los puntos anotados como anulados (Property 7, Requirement 8 AC1, Requirement 4 AC4, Tarea 10.1).
+
+## Estado actual (2026-08-24)
+- Backend, endpoints Express y flujos n8n: **pausados**.
+- Foco actual: migrar el frontend generado por v0 (`conecta-max-customer-portal/`, Next.js) hacia `proyecto-real/frontend` (Vite + React Router + JSX) — ver `.cursor/specs/migracion-frontend-v0/`.
+- El chat de soporte **ya no es efímero**: persiste en tiempo real (revierte la Property 7 de `.kiro`). Esta migración de frontend NO conecta esa persistencia todavía — sigue mockeado hasta la fase de Backend.
