@@ -1,0 +1,150 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fenix_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Cualquier .sql/.sh acá adentro se ejecuta una sola vez, al crear el volumen
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fenix_net
+
+  backend:
+    build:
+      context: ../proyecto-completo/backend
+      dockerfile: Dockerfile
+    container_name: fenix_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Postgres local no usa el CA bundle de RDS -> SSL apagado (ver pool.js)
+      DB_SSL_ENABLED: "false"
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/chat-retencion
+      N8N_CLOSE_WEBHOOK_URL: http://n8n:5678/webhook/chat-cierre
+      # Dummy a propósito: sin AWS real, la llamada a Lambda/SageMaker falla
+      # a los 4s y se ignora (ver chat.controller.js, es fire-and-forget con
+      # try/catch) — el chat sigue funcionando, simplemente sin churn ML real.
+      AWS_ACCESS_KEY_ID: dummy-local-demo
+      AWS_SECRET_ACCESS_KEY: dummy-local-demo
+      AWS_REGION: us-east-1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3001:3001"
+    networks:
+      - fenix_net
+
+  # Servicio "de un solo uso": crea credenciales, importa y publica los workflows
+  # (ver n8n-init/init.sh). Corre solo la primera vez por volumen n8n_data.
+  n8n-import:
+    image: n8nio/n8n:latest
+    container_name: fenix_n8n_import
+    restart: "no"
+    entrypoint: /bin/sh
+    # tr -d '\r': por si git en Windows convirtió el script a CRLF
+    command: ["-c", "tr -d '\\r' < /init/init.sh > /tmp/init.sh && sh /tmp/init.sh"]
+    environment:
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      FORCE_REIMPORT: ${FORCE_REIMPORT:-0}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ../n8n-workflows:/import:ro
+      - ./n8n-init:/init:ro
+    networks:
+      - fenix_net
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: fenix_n8n
+    restart: unless-stopped
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      GENERIC_TIMEZONE: America/Argentina/Buenos_Aires
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+    ports:
+      - "127.0.0.1:5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      n8n-import:
+        condition: service_completed_successfully
+      ollama-pull:
+        condition: service_completed_successfully
+    networks:
+      - fenix_net
+
+  # Servidor de Ollama (modelo local qwen2.5:7b, el mismo que usa tu nodo "Ollama Chat Model")
+  ollama:
+    image: ollama/ollama:latest
+    container_name: fenix_ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - fenix_net
+
+  # Servicio de un solo uso: descarga el modelo qwen2.5:7b (~4.7 GB) la primera vez
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: fenix_ollama_pull
+    restart: "no"
+    entrypoint: /bin/sh
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    command: >
+      -c "until ollama list >/dev/null 2>&1; do echo 'esperando a ollama...'; sleep 2; done;
+          ollama pull qwen2.5:7b"
+    depends_on:
+      - ollama
+    networks:
+      - fenix_net
+
+  frontend:
+    build:
+      context: ../proyecto-completo/frontend
+      dockerfile: Dockerfile
+    container_name: fenix_frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5173:80"
+    depends_on:
+      - backend
+    networks:
+      - fenix_net
+
+networks:
+  fenix_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  n8n_data:
+  ollama_data:
