@@ -23,6 +23,7 @@
       },
       "id": "82553495-45bb-414e-8712-9801682a7c59",
       "name": "Discord (Crítico)",
+      "continueOnFail": true,
       "type": "n8n-nodes-base.discord",
       "typeVersion": 2,
       "position": [
@@ -59,6 +60,7 @@
       },
       "id": "6d32b0e6-08b2-4b66-9a49-72470cf9a74e",
       "name": "Discord (Normal)",
+      "continueOnFail": true,
       "type": "n8n-nodes-base.discord",
       "typeVersion": 2,
       "position": [
@@ -98,13 +100,14 @@
       "parameters": {
         "operation": "upload",
         "bucketName": "proyecto-fenix-datalake-2026",
-        "fileName": "=01-bronze-raw/chat-interactions/year={{ $now.format('yyyy') }}/month={{ $now.format('MM') }}/day={{ $now.format('dd') }}/{{ $('Webhook').item.json.body.customer_id }}_{{ $('Webhook').item.json.body.sesion_id }}.json",
+        "fileName": "=01-bronze-raw/chat-interactions/year={{ $now.format('yyyy') }}/month={{ $now.format('MM') }}/day={{ $now.format('dd') }}/{{ $('Webhook').item.json.body.customer_id.replace(/\\s+/g, '') }}_{{ $('Webhook').item.json.body.sesion_id.toString().replace(/\\s+/g, '') }}.json",
         "binaryData": false,
         "fileContent": "={{ JSON.stringify({\n  \"meta_datos\": {\n    \"customer_id\": $('Webhook').item.json.body.customer_id,\n    \"sesion_id\": $('Webhook').item.json.body.sesion_id,\n    \"fecha_hora\": new Date().toISOString().replace('T', ' ').substring(0, 19)\n  },\n  \"variables_sagemaker_en_ese_instante\": $('Webhook').item.json.body.clientProfile,\n  \"analisis_ia\": {\n    \"probabilidad_churn_sagemaker\": $('Webhook').item.json.body.probabilidad_churn,\n    \"nivel_enojo\": $('Webhook').item.json.body.nivel_enojo,\n    \"motivo_reclamo\": $('Webhook').item.json.body.motivo,\n    \"tipo_ticket_detectado\": $('Webhook').item.json.body.tipo_ticket,\n    \"intencion_cancelacion_detectada\": $('Webhook').item.json.body.intencion_cancelacion_detectada,\n    \"relevancia_problema\": $('Webhook').item.json.body.relevancia_problema\n  }\n}) }}",
         "additionalFields": {}
       },
       "id": "d97ffae3-9bc3-4ef3-9bcc-4c46b91e19de",
       "name": "Log S3 Bronze",
+      "continueOnFail": true,
       "type": "n8n-nodes-base.awsS3",
       "typeVersion": 1,
       "position": [
@@ -383,7 +386,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "0c81fa8d-4b17-44af-8f14-a9952a961a1f",
+  "versionId": "ef872b3a-b8ca-471f-adaf-1dba6b0bac3f",
   "meta": {
     "instanceId": "4345195d464ec8fce96a11287058dde4c64cc7369030d54a2b968bfb4ba861f6"
   },
