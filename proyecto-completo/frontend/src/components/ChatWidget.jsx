@@ -49,7 +49,10 @@ export default function ChatWidget() {
   // directamente nunca llamaba a /api/chat/start, así que sessionId quedaba
   // null para siempre y el input/botón quedaban deshabilitados sin remedio.
   const startSession = () => {
-    const savedSessionId = sessionStorage.getItem('sesion_id');
+    // Descarta valores basura ("undefined"/"null") que quedaron guardados por una
+    // llamada anterior fallida, para que no envenenen los reintentos.
+    const stored = sessionStorage.getItem('sesion_id');
+    const savedSessionId = stored && stored !== 'undefined' && stored !== 'null' ? stored : null;
     fetch('/api/chat/start', {
       method: 'POST',
       headers: {
@@ -58,8 +61,14 @@ export default function ChatWidget() {
       },
       body: JSON.stringify(savedSessionId ? { sesion_id: savedSessionId } : {}),
     })
-      .then((r) => r.json())
-      .then((data) => {
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        // Si el backend respondió error o sin sesion_id, no guardar nada y
+        // limpiar cualquier id viejo; el catch de abajo avisa en el chat.
+        if (!ok || data.sesion_id == null) {
+          sessionStorage.removeItem('sesion_id');
+          throw new Error(data.message || 'Respuesta inválida de /api/chat/start');
+        }
         setSessionId(data.sesion_id);
         sessionStorage.setItem('sesion_id', data.sesion_id);
 
