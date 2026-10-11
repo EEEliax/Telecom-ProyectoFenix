@@ -99,6 +99,7 @@ flowchart LR
 │           ├── pages/        # Landing, Login, Inicio, Facturación, Servicios, Soporte
 │           ├── components/   # AppLayout, Sidebar, ChatWidget, etc.
 │           └── hooks/
+├── dockerProdu/           # Stack completo con Docker Compose (ver sección "Levantarlo con Docker")
 ├── n8n-workflows/         # Exports de los 2 workflows de n8n (Cerebro Chat, Insert a la nube)
 ├── .cursor/specs/         # Specs de desarrollo por feature (requirements/design/tasks)
 └── .kiro/                 # Documentación histórica del sistema V1
@@ -106,7 +107,51 @@ flowchart LR
 
 ---
 
-## Cómo correrlo localmente
+## Levantarlo con Docker (un solo comando)
+
+La forma más rápida de probar el proyecto: el stack completo (frontend, backend, PostgreSQL con datos de ejemplo, n8n y un LLM local) corre en contenedores. No hace falta instalar Node.js, PostgreSQL ni n8n.
+
+**Requisitos:** Docker Desktop (con Compose v2), ~10 GB libres en disco y al menos 8 GB de RAM asignados a Docker.
+
+```bash
+git clone <url-del-repo>
+cd <repo>/dockerProdu
+cp .env.example .env        # en PowerShell: copy .env.example .env
+docker compose up -d --build
+```
+
+> Hay que clonar el repo completo: el compose usa carpetas hermanas (`../proyecto-completo`, `../n8n-workflows`).
+
+> **El primer arranque es lento.** Ollama descarga el modelo `qwen2.5:7b` (~4.7 GB) y n8n arranca recién cuando termina. Puede tardar desde unos minutos hasta cerca de una hora según la conexión. Para seguirlo: `docker compose logs -f ollama-pull`.
+
+Una vez arriba:
+
+| Servicio | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend (API) | http://localhost:3001 |
+| n8n | http://localhost:5678 |
+| PostgreSQL | `localhost:5432` (usuario, password y base: los del `.env`) |
+
+Todos los puertos están atados a `127.0.0.1`, es decir, solo son accesibles desde la propia máquina.
+
+**Usuarios de demo** (datos ficticios, definidos en `dockerProdu/db/init/02_seed.sql`): por ejemplo `valentina.diaz@gmail.com`, con contraseña `Demo2026!`. Los 10 usuarios del seed comparten esa misma contraseña.
+
+**Qué se configura solo:** el schema y los datos de ejemplo de PostgreSQL, las credenciales de n8n (Postgres y Ollama) y la publicación de los 2 workflows (`dockerProdu/n8n-init/init.sh`). No hace falta entrar a la UI de n8n.
+
+**Limitaciones del modo demo:**
+- No hay conexión a AWS: la predicción de churn vía Lambda/SageMaker no corre (el chat funciona igual, sin la probabilidad base), y los avisos a Discord y el log a S3 del flujo de cierre se omiten sin cortar el flujo. El ticket se crea igual en PostgreSQL.
+- La primera vez que se abre la UI de n8n pide crear una cuenta *owner* local. No es necesaria para que funcionen los webhooks.
+
+**Apagar y limpiar:**
+```bash
+docker compose down        # detiene los contenedores, conserva los datos
+docker compose down -v     # además borra los volúmenes (base de datos, n8n y el modelo de Ollama: habría que volver a descargarlo)
+```
+
+---
+
+## Cómo correrlo localmente (sin Docker)
 
 ### Prerrequisitos
 - Node.js 18+

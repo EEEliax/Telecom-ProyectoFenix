@@ -122,16 +122,16 @@ INSERT INTO public.tickets_soporte (id, sesion_id, tipo_ticket, descripcion_prob
 
 -- public.usuarios
 INSERT INTO public.usuarios (id, customer_id, email, password_hash, created_at) VALUES
-(1, '7823-QPXRL', 'valentina.diaz@gmail.com',    '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2026-02-10 10:00:00'),
-(2, '4410-BNTOS', 'nicolas.romero@hotmail.com',  '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2026-08-20 11:15:00'),
-(3, '9987-LKMWA', 'camila.torres@gmail.com',     '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2021-11-05 09:30:00'),
-(4, '3356-VFDCT', 'martin.acosta@yahoo.com.ar',  '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2025-09-15 14:20:00'),
-(5, '6621-HYUIK', 'sofia.benitez@gmail.com',     '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2026-08-25 16:40:00'),
-(6, '1189-ZXPLM', 'diego.molina@outlook.com',    '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2022-12-01 08:10:00'),
-(7, '8845-RTNBV', 'agustina.rios@gmail.com',     '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2020-06-18 13:00:00'),
-(8, '2290-WQASD', 'facundo.gimenez@hotmail.com', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2026-03-30 17:50:00'),
-(9, '5567-JKLPO', 'rocio.medina@gmail.com',      '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2024-03-10 12:05:00'),
-(10, '6034-MNBVC', 'tomas.herrera@gmail.com',    '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '2025-06-22 15:35:00');
+(1, '7823-QPXRL', 'valentina.diaz@gmail.com',    '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2026-02-10 10:00:00'),
+(2, '4410-BNTOS', 'nicolas.romero@hotmail.com',  '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2026-08-20 11:15:00'),
+(3, '9987-LKMWA', 'camila.torres@gmail.com',     '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2021-11-05 09:30:00'),
+(4, '3356-VFDCT', 'martin.acosta@yahoo.com.ar',  '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2025-09-15 14:20:00'),
+(5, '6621-HYUIK', 'sofia.benitez@gmail.com',     '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2026-08-25 16:40:00'),
+(6, '1189-ZXPLM', 'diego.molina@outlook.com',    '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2022-12-01 08:10:00'),
+(7, '8845-RTNBV', 'agustina.rios@gmail.com',     '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2020-06-18 13:00:00'),
+(8, '2290-WQASD', 'facundo.gimenez@hotmail.com', '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2026-03-30 17:50:00'),
+(9, '5567-JKLPO', 'rocio.medina@gmail.com',      '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2024-03-10 12:05:00'),
+(10, '6034-MNBVC', 'tomas.herrera@gmail.com',    '$2b$10$CUxKb8nbANjzyX2n5TkEwOx5DFi6Lo7uRty2j44gcF.G6qdQf4CNW', '2025-06-22 15:35:00');
 
 -- public.historial_mensajes
 INSERT INTO public.historial_mensajes (id, sesion_id, remitente, contenido_texto, fecha_hora) VALUES
